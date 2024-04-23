@@ -1,7 +1,9 @@
+from xml.dom import UserDataHandler
 from flask import Flask, request, jsonify
 import psycopg2
 
 app = Flask(__name__)
+
 
 def get_db_connection():
     conn = psycopg2.connect(
@@ -40,9 +42,9 @@ def login_user():
                 SELECT id FROM users WHERE username = %s AND password = %s
             """, (username, password))
             user_id = cursor.fetchone()
-
+            print(f"Retrieved user ID: {user_id}")  # Debug print statement
             if user_id:
-                return jsonify({'message': 'Login successful!', 'user_id': user_id}), 200
+                return jsonify({'message': 'Login successful!', 'user_id': user_id[0]}), 200
             else:
                 return jsonify({'message': 'Invalid password'}), 401  # Unauthorized
         else:
