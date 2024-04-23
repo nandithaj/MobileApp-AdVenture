@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'screenselection.dart'; // Import ScreenSelectionPage
+import 'package:provider/provider.dart';
+import 'UserData.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -84,17 +86,40 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (response.statusCode == 200) {
-      // Login successful
+    try {
+      final data = jsonDecode(response.body);
+      if (data['user_id'] != null) {
+        // User ID received successfully
+        final userId = data['user_id'];
+        final userData = Provider.of<UserData>(context, listen: false);
+        userData.userId = userId;
+
+        // Print the user ID for verification
+        print('Retrieved user ID: $userId');
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login successful!')),
       );
       // Navigate to ScreenSelectionPage
       Navigator.pushNamed(context, '/screenSelection');
     } else {
-      // Login failed
+        // Login successful but user ID missing in response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful, but user ID missing!')),
+        );
+      }
+    } on FormatException catch (e) {
+      // Handle potential JSON parsing errors
+      print('Error parsing response: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed!')),
+        const SnackBar(content: Text('An error occurred during login.')),
       );
     }
+  } else {
+    // Login failed
+    ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text('Login failed! (Status code: ${response.statusCode})')),
+    );
   }
+}
 }
