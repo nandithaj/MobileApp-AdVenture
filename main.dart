@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import 'login.dart';
 import 'screenselection.dart';
 import 'adplaying.dart';
+import 'UserData.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider<UserData>(
+      create: (context) => UserData(),
+      child: MaterialApp(
       title: 'Login Page',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/screenSelection': (context) => ScreenSelectionPage(),
          '/adPlaying': (context) => AdPlayingPage(), // Add route for AdPlayingPage
       },
+     ),
     );
   }
 }
