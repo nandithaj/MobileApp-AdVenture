@@ -13,16 +13,16 @@ class ScreenSelectionPage extends StatefulWidget {
 
 class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
   List<String> screenNames = [];
-  List<bool> isCheckedList = [];
+  int? selectedIndex; // Store the index of the selected screen
 
   @override
   void initState() {
     super.initState();
     fetchScreenNames();
   }
-  
+
   Future<void> fetchScreenNames() async {
-   final userId = Provider.of<UserData>(context, listen: false).userId;
+    final userId = Provider.of<UserData>(context, listen: false).userId;
     try {
       final response = await http.get(
         Uri.parse('http://192.168.29.169:5000/screens?owner_id=$userId'),
@@ -35,33 +35,32 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
         final data = jsonDecode(response.body);
         setState(() {
           screenNames = List<String>.from(data['screen_names']);
-          isCheckedList = List<bool>.filled(screenNames.length, false);
         });
       } else {
-        // Handle error
         print('Failed to fetch screen names: ${response.statusCode}');
+        // Consider showing an error message to the user
       }
     } catch (error) {
-      // Handle exception
       print('Error fetching screen names: $error');
+      // Consider showing an error message to the user
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = Provider.of<UserData>(context).userId; // Access user ID
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Screen select'),
+        title: const Text('Select your screen'),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 233, 210, 0),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Text(
-              'Retrieved User ID: $userId', // Display user ID (remove in production)
-              style: TextStyle(fontSize: 20),
+              'Select the screen on which the advertisement should be played',
+              style: TextStyle(fontSize: 15),
             ),
             SizedBox(height: 20),
             ListView.builder(
@@ -69,45 +68,39 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 final screenName = screenNames[index];
-                return CheckboxListTile(
+                return RadioListTile<int>(
                   title: Text(screenName),
-                  value: isCheckedList[index],
-                  onChanged: (value) {
-                    setState(() {
-                      isCheckedList[index] = value ?? false;
-                    });
-                  },
+                  value: index,
+                  groupValue: selectedIndex,
+                  onChanged: (value) => setState(() => selectedIndex = value),
                 );
               },
             ),
-            FloatingActionButton(
+            ElevatedButton.icon(
               onPressed: () {
-                bool isAnyChecked = false;
-                for (int i = 0; i < isCheckedList.length; i++) {
-                  if (isCheckedList[i]) {
-                    isAnyChecked = true;
-                    break;
-                  }
-                }
-                if (isAnyChecked) {
-                  // You can potentially send the selected screens and user ID here
+                if (selectedIndex != null) {
+                  // You can potentially send the selected screen index and user ID here
                   // using an API call or navigate to the ad playing page with arguments
-                  print('Selected screens and user ID: ');
+                  print('Selected screen index and user ID: ');
+                  final userId =
+                      Provider.of<UserData>(context, listen: false).userId;
                   print('User ID: $userId');
-                  for (int i = 0; i < isCheckedList.length; i++) {
-                    if (isCheckedList[i]) {
-                      print('Screen: ${screenNames[i]}');
-                    }
-                  }
-                  Navigator.pushNamed(context, '/adPlaying'); // Adjust route name if needed
+                  print('Selected screen: ${screenNames[selectedIndex!]}');
+                  Navigator.pushNamed(
+                      context, '/adPlaying'); // Adjust route name if needed
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please select at least one screen')),
+                    SnackBar(content: Text('Please select a screen')),
                   );
                 }
               },
-              child: Icon(Icons.add),
-              tooltip: 'Play Ad',
+              icon: Icon(Icons.play_arrow), // Use play_arrow icon for play functionality
+              label: Text('Play Advertisement'),
+              style: ElevatedButton.styleFrom(
+                minimumSize:
+                    Size(double.infinity, 80.0), // Set button height to 50
+                backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+              ),
             ),
           ],
         ),
