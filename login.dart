@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'screenselection.dart'; // Import ScreenSelectionPage
+//import 'dash.dart'; // Import ScreenSelectionPage (assuming dash.dart contains ScreenSelectionPage)
 import 'package:provider/provider.dart';
 import 'UserData.dart';
+import 'signup_page.dart'; // Import your SignupPage class
+import 'package:dynamic_color/dynamic_color.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -21,17 +23,33 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+          title: const Text('Login'),
+          centerTitle: true,
+          backgroundColor: const Color.fromARGB(255, 233, 210, 0)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              const SizedBox(height: 20),
+              Image.asset(
+                'assets/logoadventure.png', // Replace with your logo path
+                height: 100.0,
+                width: 200.0,
+              ),
+              const SizedBox(height: 40),
               TextFormField(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Username',
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                    ),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -41,10 +59,19 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 onSaved: (newValue) => _username = newValue!,
               ),
+              const SizedBox(height: 10),
               TextFormField(
                 obscureText: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                    ),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -54,17 +81,44 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 onSaved: (newValue) => _password = newValue!,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      await loginUser(_username, _password, context);
-                    }
-                  },
-                  child: const Text('Login'),
-                ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        _formKey.currentState!.save();
+                        await loginUser(_username, _password, context);
+                      }
+                    },
+                    child: const Text('Login'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(100, 50),
+                      backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to signup page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignupPage()),
+                      );
+                    },
+                    child: const Text('Sign Up'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(100, 50),
+                      backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -73,9 +127,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> loginUser(String username, String password, BuildContext context) async {
+  Future<void> loginUser(
+      String username, String password, BuildContext context) async {
     final response = await http.post(
-      Uri.parse('http://192.168.255.185:5000/login'),
+      Uri.parse('http://192.168.29.169:5000/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -86,40 +141,43 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (response.statusCode == 200) {
-    try {
-      final data = jsonDecode(response.body);
-      if (data['user_id'] != null) {
-        // User ID received successfully
-        final userId = data['user_id'];
-        final userData = Provider.of<UserData>(context, listen: false);
-        userData.userId = userId;
+      try {
+        final data = jsonDecode(response.body);
+        if (data['user_id'] != null) {
+          // User ID received successfully
+          final userId = data['user_id'];
+          final userData = Provider.of<UserData>(context, listen: false);
+          userData.userId = userId;
 
-        // Print the user ID for verification
-        print('Retrieved user ID: $userId');
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
-      // Navigate to ScreenSelectionPage
-      Navigator.pushNamed(context, '/screenSelection');
-    } else {
-        // Login successful but user ID missing in response
+          // Print the user ID for verification
+          print('Retrieved user ID: $userId');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login successful!')),
+          );
+          // Navigate to ScreenSelectionPage
+          Navigator.pushNamed(context, '/screenSelection');
+        } else {
+          // Login successful but user ID missing in response
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Login successful, but user ID missing!')),
+          );
+        }
+      } on FormatException catch (e) {
+        // Handle potential JSON parsing errors
+        print('Error parsing response: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful, but user ID missing!')),
+          const SnackBar(content: Text('An error occurred during login.')),
         );
       }
-    } on FormatException catch (e) {
-      // Handle potential JSON parsing errors
-      print('Error parsing response: $e');
+    } else {
+      // Login failed
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred during login.')),
+        SnackBar(
+            content:
+                Text('Login failed! (Status code: ${response.statusCode})')),
       );
     }
-  } else {
-    // Login failed
-    ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(content: Text('Login failed! (Status code: ${response.statusCode})')),
-    );
   }
-}
 }
