@@ -4,7 +4,7 @@ import psycopg2
 
 app = Flask(__name__)
 
-
+ad_content = {}
 def get_db_connection():
     conn = psycopg2.connect(
         database="miniproj",
@@ -72,6 +72,8 @@ def get_screens():
         return jsonify({'screen_names': screen_names}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 
 print(f"Service listening on: http://localhost:{5000}")
 
