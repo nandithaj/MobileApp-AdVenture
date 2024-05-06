@@ -1,4 +1,4 @@
-from xml.dom import UserDataHandler
+#from xml.dom import UserDataHandler
 from flask import Flask, request, jsonify
 import psycopg2
 
@@ -15,6 +15,59 @@ def get_db_connection():
     )
     return conn
 
+#SIGN UP
+def create_user(username, password, email, first_name, last_name):
+  """Creates a new user in the database."""
+  conn = get_db_connection()
+  cursor = conn.cursor()
+
+  # Hash the password before storing it
+  #hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+  try:
+    # SQL query to insert user data
+    sql = """
+        INSERT INTO users (username, password, email, first_name, last_name)
+        VALUES (%s, %s, %s, %s, %s)
+    """
+
+    # Execute the query with user data
+    cursor.execute(sql, (username,password, email, first_name, last_name))
+    conn.commit()
+
+    print(f"User '{username}' created successfully!")
+
+    # Consider returning the user ID if needed
+
+  except Exception as e:
+    print(f"Error creating user: {e}")
+    conn.rollback()  # Rollback changes on error
+
+
+@app.route("/signup", methods=["POST"])
+def register_user():
+  """Handles POST requests for user signup."""
+  # Get data from the request body
+  data = request.get_json()
+  username = data.get("username")
+  password = data.get("password")
+  email = data.get("email")
+  first_name = data.get("first_name")
+  last_name = data.get("last_name")
+
+  # Validation
+  if not username or not password or not email or not first_name or not last_name:
+    return jsonify({"error": "Missing required fields"}), 400
+
+  try:
+    create_user(username, password, email, first_name, last_name)
+    return jsonify({"message": "Registration successful!"}), 201
+  except Exception as e:
+    print(f"Error during user registration: {e}")
+    return jsonify({"error": "Registration failed"}), 500
+
+
+#LOGIN
 @app.route('/login', methods=['POST'])
 def login_user():
     # Get user data from the request body (assuming JSON format)
