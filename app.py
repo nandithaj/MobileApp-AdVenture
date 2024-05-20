@@ -1,6 +1,9 @@
 #from xml.dom import UserDataHandler
-from flask import Flask, request, jsonify
+import base64
+import io
+from flask import Flask, Response, request, jsonify, send_file
 import psycopg2
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -126,9 +129,64 @@ def get_screens():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/getscreenid', methods=['GET'])
+def get_screen_id():
+    try:
+        owner_id = request.args.get('owner_id')
+        screen_name = request.args.get('screen_name')
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT screen_id FROM screens WHERE owner_id = %s AND screen_name = %s", (owner_id, screen_name))
+        screen_id = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if screen_id:
+            return jsonify({'screen_id': screen_id[0]}), 200
+        else:
+            return jsonify({'error': 'Screen not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
-print(f"Service listening on: http://localhost:{5000}")
+
+@app.route('/get-ad/<screenid>', methods=['GET'])
+def get_ad(screenid):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        if not connection:
+            return jsonify({'error': 'Failed to connect to database'}), 500
+
+        # Get current date and time
+        current_datetime = datetime.now()
+
+        # Prepare SQL query to select video_path based on ad_schedule and ads tables
+        sql = """
+            SELECT ads.file_name
+            FROM ads
+            JOIN ad_schedule ON ads.ad_id = ad_schedule.ad_id
+            WHERE ad_schedule.screen_id = %s
+            AND ad_schedule.schedule_date = %s
+            AND ad_schedule.start_time <= %s
+            AND ad_schedule.end_time >= %s;
+        """
+        cursor.execute(sql, (screenid, current_datetime.date(), current_datetime.time(), current_datetime.time()))
+
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'No ad found for the specified screen and time'}), 404
+
+        file_name = row[0]
+
+        connection.close()
+        return jsonify({'videoUrl': file_name}), 200
+
+    except Exception as e:
+        print("Error fetching ad:", e)
+        return jsonify({'error': 'Failed to fetch ad'}), 500
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
