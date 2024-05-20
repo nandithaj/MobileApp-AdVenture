@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 //import 'dash.dart'; // Import ScreenSelectionPage (assuming dash.dart contains ScreenSelectionPage)
 import 'package:provider/provider.dart';
 import 'UserData.dart';
-import 'signup_page.dart'; // Import your SignupPage class
-import 'package:dynamic_color/dynamic_color.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -24,8 +22,9 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
           title: const Text('Login'),
+          foregroundColor: Color.fromARGB(255, 240, 235, 235),
           centerTitle: true,
-          backgroundColor: const Color.fromARGB(255, 233, 210, 0)),
+          backgroundColor: Color.fromARGB(255, 131, 2, 244)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
         child: Form(
@@ -34,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const SizedBox(height: 20),
               Image.asset(
-                'assets/logoadventure.png', // Replace with your logo path
+                'assets/logof.png', // Replace with your logo path
                 height: 100.0,
                 width: 200.0,
               ),
@@ -94,30 +93,15 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     child: const Text('Login'),
                     style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color.fromARGB(255, 240, 235, 235),
                       minimumSize: const Size(100, 50),
-                      backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+                      backgroundColor: const Color.fromARGB(255, 131, 2, 244),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5.0),
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Navigate to signup page
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignupPage()),
-                      );
-                    },
-                    child: const Text('Sign Up'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(100, 50),
-                      backgroundColor: const Color.fromARGB(255, 233, 210, 0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ],
@@ -130,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> loginUser(
       String username, String password, BuildContext context) async {
     final response = await http.post(
-      Uri.parse('http://192.168.29.169:5000/login'),
+      Uri.parse('http://192.168.13.123:5000/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
