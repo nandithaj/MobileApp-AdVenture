@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:provider/provider.dart';
 
 import 'login.dart';
 import 'screenselection.dart';
-import 'adplaying.dart';
+import 'displayPage.dart';
 import 'UserData.dart';
+import 'screendata.dart'; // Import the ScreenIdProvider class
 
 void main() {
   runApp(MyApp());
@@ -15,21 +14,28 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<UserData>(
-      create: (context) => UserData(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<UserData>(
+          create: (context) => UserData(),
+        ),
+        ChangeNotifierProvider<ScreenIdProvider>(
+          create: (context) => ScreenIdProvider(),
+        ),
+      ],
       child: MaterialApp(
-      title: 'Login Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+        title: 'Login Page',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        // Define routes
+        initialRoute: '/',
+        routes: {
+          '/': (context) => LoginPage(),
+          '/screenSelection': (context) => ScreenSelectionPage(),
+          '/adPlaying': (context) => DisplayAdImage(), // Add route for AdPlayingPage
+        },
       ),
-      // Define routes
-      initialRoute: '/',
-      routes: {
-        '/': (context) => LoginPage(),
-        '/screenSelection': (context) => ScreenSelectionPage(),
-         '/adPlaying': (context) => AdPlayingPage(), // Add route for AdPlayingPage
-      },
-     ),
     );
   }
 }
