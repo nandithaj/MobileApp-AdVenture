@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobileapp/screendata.dart';
 import 'package:provider/provider.dart';
-import 'UserData.dart'; // Make sure UserData.dart is defined
+import 'UserData.dart'; 
 
 class ScreenSelectionPage extends StatefulWidget {
   const ScreenSelectionPage({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class ScreenSelectionPage extends StatefulWidget {
 
 class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
   List<String> screenNames = [];
-  int? selectedIndex; // Store the index of the selected screen
+  String? selectedScreenName; // Store the selected screen name
 
   @override
   void initState() {
@@ -25,7 +26,7 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
     final userId = Provider.of<UserData>(context, listen: false).userId;
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.29.169:5000/screens?owner_id=$userId'),
+        Uri.parse('http://192.168.13.123:5000/screens?owner_id=$userId'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -46,13 +47,40 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
     }
   }
 
+  Future<void> getScreenId(String screenName) async {
+    final userId = Provider.of<UserData>(context, listen: false).userId;
+    final screenIdProvider = Provider.of<ScreenIdProvider>(context, listen: false);
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.13.123:5000/getscreenid?owner_id=$userId&screen_name=$screenName'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final screenId = data['screen_id'];
+        print('Screen ID for $screenName: $screenId');
+        screenIdProvider.setSelectedScreenId(screenId);
+      } else {
+        print('Failed to fetch screen ID: ${response.statusCode}');
+        // Consider showing an error message to the user
+      }
+    } catch (error) {
+      print('Error fetching screen ID: $error');
+      // Consider showing an error message to the user
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: const Color.fromARGB(255, 240, 235, 235),
         title: const Text('Select your screen'),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+        backgroundColor: const Color.fromARGB(255, 131, 2, 244),
       ),
       body: Center(
         child: Column(
@@ -68,24 +96,29 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 final screenName = screenNames[index];
-                return RadioListTile<int>(
+                return RadioListTile<String>(
                   title: Text(screenName),
-                  value: index,
-                  groupValue: selectedIndex,
-                  onChanged: (value) => setState(() => selectedIndex = value),
+                  value: screenName,
+                  groupValue: selectedScreenName,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedScreenName = value;
+                      getScreenId(selectedScreenName!); // Fetch screen ID when screen is selected
+                    });
+                  },
                 );
               },
             ),
             ElevatedButton.icon(
               onPressed: () {
-                if (selectedIndex != null) {
+                if (selectedScreenName != null) {
                   // You can potentially send the selected screen index and user ID here
                   // using an API call or navigate to the ad playing page with arguments
-                  print('Selected screen index and user ID: ');
+                  print('Selected screen name and user ID: ');
                   final userId =
                       Provider.of<UserData>(context, listen: false).userId;
                   print('User ID: $userId');
-                  print('Selected screen: ${screenNames[selectedIndex!]}');
+                  print('Selected screen: $selectedScreenName');
                   Navigator.pushNamed(
                       context, '/adPlaying'); // Adjust route name if needed
                 } else {
@@ -97,9 +130,10 @@ class _ScreenSelectionPageState extends State<ScreenSelectionPage> {
               icon: Icon(Icons.play_arrow), // Use play_arrow icon for play functionality
               label: Text('Play Advertisement'),
               style: ElevatedButton.styleFrom(
+                foregroundColor: const Color.fromARGB(255, 240, 235, 235),
                 minimumSize:
                     Size(double.infinity, 80.0), // Set button height to 50
-                backgroundColor: const Color.fromARGB(255, 233, 210, 0),
+                backgroundColor: const Color.fromARGB(255, 131, 2, 244),
               ),
             ),
           ],
