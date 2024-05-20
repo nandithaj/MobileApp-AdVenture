@@ -1,4 +1,3 @@
-// In a separate file (e.g., user_data.dart)
 import 'package:flutter/foundation.dart';
 
 class UserData extends ChangeNotifier {
